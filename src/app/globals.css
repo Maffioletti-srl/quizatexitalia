@@ -1,26 +1,70 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Palette Atex Italia — crème de la bannière (header-3-curva.jpg) et orange
+   du logo. L'orange #F49934 ne porte pas de texte blanc (contraste 2,2:1) :
+   les boutons orange ont un texte foncé, et l'orange en TEXTE est foncé. */
+@theme {
+  --color-bg: #f6f3ee;
+  --color-surface: #ffffff;
+  --color-surface-2: #efeae2;
+  --color-line: #e2dbd0;
+  --color-ink: #1a1d22;
+  --color-muted: #5d636d;
+  --color-navy: #08243c;
+  --color-accent: #f49934;
+  --color-accent-hover: #e8861a;
+  /* Orange foncé pour du texte sur crème/blanc (contraste AA 4,9:1) */
+  --color-accent-text: #a35400;
+
+  --color-level-critico: #c81e1e;
+  --color-level-da_migliorare: #b45309;
+  --color-level-buono: #4d7c0f;
+  --color-level-eccellente: #15803d;
+
+  --font-sans: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+/* Focus visible partout, très lisible sur fond sombre.
+   Dans @layer base pour que les utilitaires (outline-none…) puissent le surcharger. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.35s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
