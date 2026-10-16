@@ -31,7 +31,13 @@ export function AreaRadar({ data, label }: { data: RadarPoint[]; label: string }
   return (
     <div role="img" aria-label={label} className="h-72 w-full sm:h-80">
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={data} outerRadius="70%" margin={{ top: 8, right: 56, bottom: 8, left: 56 }}>
+        {/* overflow visible : les libellés longs (« Apparecchiature ») peuvent mordre sur la marge de la carte sur mobile */}
+        <RadarChart
+          data={data}
+          outerRadius="70%"
+          margin={{ top: 8, right: 56, bottom: 8, left: 56 }}
+          style={{ overflow: "visible" }}
+        >
           <PolarGrid stroke="var(--color-line)" />
           <PolarAngleAxis dataKey="area" tick={{ fill: "var(--color-muted)", fontSize: 11 }} />
           <PolarRadiusAxis domain={[0, 100]} tickCount={5} tick={false} axisLine={false} />

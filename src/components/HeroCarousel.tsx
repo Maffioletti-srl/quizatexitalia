@@ -69,22 +69,36 @@ export function HeroCarousel({ panels, className = "" }: { panels: ReactNode[]; 
         if (!e.currentTarget.contains(e.relatedTarget)) setHovered(false);
       }}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
-        {pairs[pair].map((panel, side) => (
-          <div
-            key={side}
-            role="group"
-            aria-roledescription="slide"
-            className="transition-[transform,opacity] duration-700 ease-in-out"
-            style={
-              visible
-                ? undefined
-                : { transform: `translateX(${side === 0 ? "-120%" : "120%"})`, opacity: 0 }
-            }
-          >
-            {panel}
-          </div>
-        ))}
+      {/* Toutes les paires dans la même cellule : la hauteur est celle de la plus
+          haute, rien ne bouge en dessous quand la paire change (mobile, tablette). */}
+      <div className="grid">
+        {pairs.map((panelsOfPair, i) => {
+          const active = i === pair;
+          return (
+            <div
+              key={i}
+              aria-hidden={!active || undefined}
+              inert={!active}
+              className={`grid gap-4 [grid-area:1/1] sm:grid-cols-2 ${active ? "" : "invisible"}`}
+            >
+              {panelsOfPair.map((panel, side) => (
+                <div
+                  key={side}
+                  role="group"
+                  aria-roledescription="slide"
+                  className="transition-[transform,opacity] duration-700 ease-in-out"
+                  style={
+                    active && visible
+                      ? undefined
+                      : { transform: `translateX(${side === 0 ? "-120%" : "120%"})`, opacity: 0 }
+                  }
+                >
+                  {panel}
+                </div>
+              ))}
+            </div>
+          );
+        })}
       </div>
 
       <div className="mt-2 flex items-center justify-center gap-2">
@@ -95,7 +109,7 @@ export function HeroCarousel({ panels, className = "" }: { panels: ReactNode[]; 
             onClick={() => goTo(i)}
             aria-label={t.carouselGoTo(i + 1, pairs.length)}
             aria-current={i === pair || undefined}
-            className="flex h-6 items-center"
+            className="flex h-6 min-w-6 items-center justify-center"
           >
             <span
               aria-hidden="true"

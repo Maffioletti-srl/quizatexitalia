@@ -229,7 +229,6 @@ export function LeadForm({ answers, onBack, onSuccess }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
-      <div className="mb-8 h-2 rounded-full bg-accent" aria-hidden="true" />
       <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold outline-none sm:text-3xl">
         {t.title}
       </h1>

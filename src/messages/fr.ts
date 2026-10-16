@@ -40,6 +40,10 @@ export const fr: Messages = {
     },
     heroImageAlt: "Technicien portant un casque de sécurité devant une installation pétrochimique",
     cta: "Commencer l'évaluation",
+    benefitsEyebrow: "Le résultat",
+    areasEyebrow: "La méthode",
+    audienceEyebrow: "Pour qui",
+    howEyebrow: "Le parcours",
     benefitsTitle: "Ce que vous obtenez",
     benefits: [
       {
