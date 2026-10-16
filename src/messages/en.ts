@@ -39,6 +39,10 @@ export const en: Messages = {
     },
     heroImageAlt: "Technician wearing a safety helmet in front of a petrochemical plant",
     cta: "Start the assessment",
+    benefitsEyebrow: "The outcome",
+    areasEyebrow: "The method",
+    audienceEyebrow: "Who it's for",
+    howEyebrow: "The process",
     benefitsTitle: "What you get",
     benefits: [
       {

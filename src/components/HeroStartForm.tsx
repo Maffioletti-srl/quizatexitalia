@@ -87,16 +87,16 @@ export function HeroStartForm() {
 
   return (
     <form id={START_FORM_ID} onSubmit={onSubmit} noValidate className="scroll-mt-24">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-start">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_auto] xl:items-start">
         {field("azienda", "text", "organization", t.startForm.azienda, t.startForm.aziendaPlaceholder)}
         {field("email", "email", "email", t.startForm.email, t.startForm.emailPlaceholder)}
         {/* Aligné sur les champs : hauteur du label + marge */}
-        <button type="submit" className={`${btnPrimary} h-[2.875rem] px-5 py-0 sm:col-span-2 lg:col-span-1 lg:mt-[1.625rem]`}>
+        <button type="submit" className={`${btnPrimary} h-[2.875rem] px-5 py-0 sm:col-span-2 xl:col-span-1 xl:mt-[1.625rem]`}>
           {t.cta}
           <span aria-hidden="true">→</span>
         </button>
       </div>
-      <p className="mt-2.5 text-xs text-muted md:short:hidden">
+      <p className="mt-2.5 text-xs text-muted short:hidden">
         {t.duration} · {t.startForm.note}
       </p>
     </form>

@@ -44,6 +44,10 @@ export const it = {
     },
     heroImageAlt: "Tecnico con casco di sicurezza davanti a un impianto petrolchimico",
     cta: "Inizia la valutazione",
+    benefitsEyebrow: "Il risultato",
+    areasEyebrow: "Il metodo",
+    audienceEyebrow: "Per chi",
+    howEyebrow: "Il percorso",
     benefitsTitle: "Cosa ottieni",
     benefits: [
       {

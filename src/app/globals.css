@@ -59,9 +59,14 @@ body {
 }
 
 /* Écrans peu hauts (portables) : la home tient sans scroll en compactant le hero */
-@custom-variant short (@media (max-height: 760px));
+/* Home en deux colonnes, sans scroll : écrans larges en paysage (desktop,
+   portable, tablette à l'horizontale). Smartphones et tablettes en portrait :
+   mise en page empilée qui défile. */
+@custom-variant desk (@media (min-width: 64rem) and (orientation: landscape));
+/* Desktop peu haut : le hero se compacte (sous-titre masqué, titre réduit) */
+@custom-variant short (@media (min-width: 64rem) and (orientation: landscape) and (max-height: 800px));
 /* Desktop pas assez haut pour les cartes complètes : version compacte */
-@custom-variant compact (@media (min-width: 48rem) and (max-height: 899px));
+@custom-variant compact (@media (min-width: 64rem) and (orientation: landscape) and (max-height: 899px));
 
 @media (prefers-reduced-motion: reduce) {
   *,

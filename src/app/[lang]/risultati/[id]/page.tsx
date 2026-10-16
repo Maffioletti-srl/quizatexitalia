@@ -166,7 +166,7 @@ async function ResultContent({ params }: { params: PageProps<"/[lang]/risultati/
                 <p className="mt-1 text-sm text-muted">{a.service.description}</p>
                 <a
                   href={a.service.url}
-                  className="mt-3 inline-block text-sm font-semibold text-accent-text underline-offset-4 hover:underline"
+                  className="mt-2 inline-block py-1 text-sm font-semibold text-accent-text underline-offset-4 hover:underline"
                 >
                   {t.serviceCta} <span aria-hidden="true">→</span>
                 </a>
@@ -193,7 +193,7 @@ async function ResultContent({ params }: { params: PageProps<"/[lang]/risultati/
       </section>
 
       <p className="mt-10 text-center">
-        <Link href={localePath(locale, "/valutazione?nuova=1")} className="text-sm text-muted underline underline-offset-4 hover:text-ink">
+        <Link href={localePath(locale, "/valutazione?nuova=1")} className="inline-block py-1 text-sm text-muted underline underline-offset-4 hover:text-ink">
           {t.restart}
         </Link>
       </p>
