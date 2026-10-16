@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
-import { AREAS, QUESTIONS, QUIZ_VERSION } from "@/config/questions";
+import { getAreas, getQuestions } from "@/config/content";
+import { QUESTIONS, QUIZ_VERSION } from "@/config/questions";
 import { btnPrimary, btnSecondary } from "@/components/ui";
 import type { Answers } from "@/lib/scoring";
 import { readSession, removeSession, writeSession } from "@/lib/session-storage";
-import { m } from "@/messages";
+import { useLocale, useMessages } from "@/i18n/client";
+import { localePath } from "@/i18n/config";
 import { LeadForm } from "./LeadForm";
 
 const STORAGE_KEY = "atex-quiz:state";
@@ -40,6 +42,7 @@ function loadState(): QuizState {
 
 export default function Quiz() {
   const router = useRouter();
+  const locale = useLocale();
   // Rendu client uniquement (voir QuizLoader) : lecture directe du stockage.
   const [state, setState] = useState<QuizState>(loadState);
 
@@ -56,15 +59,19 @@ export default function Quiz() {
 
   if (state.step >= TOTAL) {
     return (
-      <LeadForm
-        answers={state.answers}
-        onBack={() => goTo(TOTAL - 1)}
-        onSuccess={(id) => {
-          // Réponses enregistrées : on peut vider la session
-          removeSession(STORAGE_KEY);
-          router.replace(`/risultati/${id}`);
-        }}
-      />
+      <>
+        {/* Questionnaire terminé : barre de progression pleine */}
+        <div aria-hidden="true" className="h-1.5 w-full bg-accent" />
+        <LeadForm
+          answers={state.answers}
+          onBack={() => goTo(TOTAL - 1)}
+          onSuccess={(id) => {
+            // Réponses enregistrées : on peut vider la session
+            removeSession(STORAGE_KEY);
+            router.replace(localePath(locale, `/risultati/${id}`));
+          }}
+        />
+      </>
     );
   }
 
@@ -96,9 +103,12 @@ interface QuestionStepProps {
 }
 
 function QuestionStep({ index, selected, onSelect, onNext, onBack, onRestart }: QuestionStepProps) {
-  const question = QUESTIONS[index];
-  const areaIndex = AREAS.findIndex((a) => a.id === question.areaId);
-  const area = AREAS[areaIndex];
+  const locale = useLocale();
+  const m = useMessages();
+  const areas = getAreas(locale);
+  const question = getQuestions(locale)[index];
+  const areaIndex = areas.findIndex((a) => a.id === question.areaId);
+  const area = areas[areaIndex];
   const headingRef = useRef<HTMLHeadingElement>(null);
   const timer = useRef<number | undefined>(undefined);
 
@@ -161,74 +171,75 @@ function QuestionStep({ index, selected, onSelect, onNext, onBack, onRestart }: 
   };
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
-      {/* Progression */}
-      <div className="mb-8">
-        <div className="flex items-baseline justify-between gap-4 text-sm">
+    <div className="w-full">
+      {/* Barre de progression pleine largeur, juste sous le header */}
+      <div
+        role="progressbar"
+        aria-label={m.quiz.progressLabel(index + 1, TOTAL)}
+        aria-valuemin={0}
+        aria-valuemax={TOTAL}
+        aria-valuenow={index + 1}
+        aria-valuetext={`${m.quiz.progressLabel(index + 1, TOTAL)} · ${area.title}`}
+        className="h-1.5 w-full bg-surface-2"
+      >
+        <div
+          className="h-full bg-accent transition-[width] duration-500"
+          style={{ width: `${Math.max(progress, 3)}%` }}
+        />
+      </div>
+
+      <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="mb-8 flex items-baseline justify-between gap-4 text-sm">
           <p className="font-semibold text-accent-text">
-            {m.quiz.areaLabel(areaIndex + 1, AREAS.length, area.title)}
+            {m.quiz.areaLabel(areaIndex + 1, areas.length, area.title)}
           </p>
           <p className="shrink-0 text-muted">{m.quiz.progressLabel(index + 1, TOTAL)}</p>
         </div>
-        <div
-          role="progressbar"
-          aria-label={m.quiz.progressLabel(index + 1, TOTAL)}
-          aria-valuemin={0}
-          aria-valuemax={TOTAL}
-          aria-valuenow={index + 1}
-          aria-valuetext={`${m.quiz.progressLabel(index + 1, TOTAL)} · ${area.title}`}
-          className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2"
-        >
-          <div
-            className="h-full rounded-full bg-accent transition-[width] duration-500"
-            style={{ width: `${Math.max(progress, 3)}%` }}
-          />
-        </div>
-      </div>
 
-      <form onSubmit={handleSubmit} className="animate-fade-up">
-        <fieldset>
-          <legend className="contents">
-            <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold leading-snug outline-none sm:text-3xl">
-              {question.text}
-            </h1>
-          </legend>
-          {question.hint && <p className="mt-3 text-sm text-muted">{question.hint}</p>}
+        <form onSubmit={handleSubmit} className="animate-fade-up">
+          <fieldset>
+            <legend className="contents">
+              <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold leading-snug outline-none sm:text-3xl">
+                {question.text}
+              </h1>
+            </legend>
+            {question.hint && <p className="mt-3 text-sm text-muted">{question.hint}</p>}
 
-          <div className="mt-8 space-y-3">{mainOptions.map((o) => optionCard(o))}</div>
-          {unknownOptions.length > 0 && (
-            <div className="mt-3 border-t border-line pt-3">{unknownOptions.map((o) => optionCard(o, true))}</div>
-          )}
-        </fieldset>
+            <div className="mt-8 space-y-3">{mainOptions.map((o) => optionCard(o))}</div>
+            {unknownOptions.length > 0 && (
+              <div className="mt-3 border-t border-line pt-3">{unknownOptions.map((o) => optionCard(o, true))}</div>
+            )}
+          </fieldset>
 
-        <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {onBack ? (
-            <button type="button" onClick={onBack} className={btnSecondary}>
-              <span aria-hidden="true">←</span> {m.quiz.back}
+          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {onBack ? (
+              <button type="button" onClick={onBack} className={btnSecondary}>
+                <span aria-hidden="true">←</span> {m.quiz.back}
+              </button>
+            ) : (
+              <Link href={localePath(locale, "/")} className={btnSecondary}>
+                <span aria-hidden="true">←</span> {m.quiz.back}
+              </Link>
+            )}
+            <button type="submit" disabled={!selected} className={btnPrimary} aria-describedby={selected ? undefined : "choose-hint"}>
+              {isLast ? m.quiz.finish : m.quiz.next} <span aria-hidden="true">→</span>
             </button>
-          ) : (
-            <Link href="/" className={btnSecondary}>
-              <span aria-hidden="true">←</span> {m.quiz.back}
-            </Link>
+          </div>
+          {!selected && (
+            <p id="choose-hint" className="mt-3 text-right text-sm text-muted">
+              {m.quiz.chooseHint}
+            </p>
           )}
-          <button type="submit" disabled={!selected} className={btnPrimary} aria-describedby={selected ? undefined : "choose-hint"}>
-            {isLast ? m.quiz.finish : m.quiz.next} <span aria-hidden="true">→</span>
-          </button>
-        </div>
-        {!selected && (
-          <p id="choose-hint" className="mt-3 text-right text-sm text-muted">
-            {m.quiz.chooseHint}
+        </form>
+
+        {onRestart && (
+          <p className="mt-10 text-center">
+            <button type="button" onClick={onRestart} className="text-sm text-muted underline underline-offset-4 hover:text-ink">
+              {m.quiz.restart}
+            </button>
           </p>
         )}
-      </form>
-
-      {onRestart && (
-        <p className="mt-10 text-center">
-          <button type="button" onClick={onRestart} className="text-sm text-muted underline underline-offset-4 hover:text-ink">
-            {m.quiz.restart}
-          </button>
-        </p>
-      )}
+      </div>
     </div>
   );
 }

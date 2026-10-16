@@ -7,12 +7,12 @@
  * à éviter dans les textes du rapport.
  */
 import { Document, Image, Line, Page, Polygon, StyleSheet, Svg, Text, View } from "@react-pdf/renderer";
-import { AREAS, type Area } from "@/config/questions";
+import { getAreas } from "@/config/content";
+import type { Area } from "@/config/questions";
+import { INTL_LOCALES, type Locale } from "@/i18n/config";
 import type { PublicResult } from "@/lib/results";
 import type { LevelId } from "@/lib/scoring";
-import { m } from "@/messages";
-
-const t = m.pdf;
+import { getMessages, type Messages } from "@/messages";
 
 const C = {
   ink: "#16181C",
@@ -76,9 +76,9 @@ const s = StyleSheet.create({
   },
 });
 
-const dateFmt = new Intl.DateTimeFormat("it-IT", { dateStyle: "long", timeZone: "Europe/Rome" });
 
 export interface ReportProps {
+  locale: Locale;
   result: PublicResult;
   resultUrl: string;
   contactEmail: string;
@@ -87,12 +87,15 @@ export interface ReportProps {
   images: { logo: Buffer; banner: Buffer };
 }
 
-export function ReportDocument({ result, resultUrl, contactEmail, siteUrl, images }: ReportProps) {
+export function ReportDocument({ locale, result, resultUrl, contactEmail, siteUrl, images }: ReportProps) {
+  const m = getMessages(locale);
+  const t = m.pdf;
+  const areas = getAreas(locale);
   const level = m.levels[result.level];
-  const priorities = result.weakest.map((id) => AREAS.find((a) => a.id === id)).filter((a): a is Area => !!a);
+  const priorities = result.weakest.map((id) => areas.find((a) => a.id === id)).filter((a): a is Area => !!a);
 
   return (
-    <Document title={t.docTitle} author="Atex Italia" subject={t.subtitle} language="it">
+    <Document title={t.docTitle} author="Atex Italia" subject={t.subtitle} language={locale}>
       {/* ── Page 1 : synthèse ─────────────────────────────────────────── */}
       <Page size="A4" style={s.page}>
         {/* Bannière Atex Italia (1536×338) sur toute la largeur utile */}
@@ -103,7 +106,7 @@ export function ReportDocument({ result, resultUrl, contactEmail, siteUrl, image
             <Text style={s.title}>{t.title}</Text>
             <Text style={s.subtitle}>{t.subtitle}</Text>
           </View>
-          <Meta result={result} />
+          <Meta result={result} m={m} locale={locale} />
         </View>
 
         <View style={[s.row, { gap: 14 }]}>
@@ -115,13 +118,13 @@ export function ReportDocument({ result, resultUrl, contactEmail, siteUrl, image
           </View>
           <View style={[s.box, { flex: 1.15, alignItems: "center" }]}>
             <Text style={[s.label, { alignSelf: "flex-start" }]}>{t.radarTitle}</Text>
-            <Radar scores={AREAS.map((a) => result.areas[a.id])} labels={AREAS.map((a) => a.shortTitle)} />
+            <Radar scores={areas.map((a) => result.areas[a.id])} labels={areas.map((a) => a.shortTitle)} />
           </View>
         </View>
 
         <View style={[s.box, { marginTop: 14 }]}>
           <Text style={[s.label, { marginBottom: 8 }]}>{t.areasTitle}</Text>
-          {AREAS.map((a) => {
+          {areas.map((a) => {
             const v = result.areas[a.id];
             return (
               <View key={a.id} style={{ marginBottom: 7 }} wrap={false}>
@@ -146,12 +149,12 @@ export function ReportDocument({ result, resultUrl, contactEmail, siteUrl, image
           </Text>
         </View>
 
-        <Footer />
+        <Footer m={m} />
       </Page>
 
       {/* ── Page 2 : priorités et prochaines étapes ───────────────────── */}
       <Page size="A4" style={s.page}>
-        <Header result={result} logo={images.logo} />
+        <Header result={result} logo={images.logo} m={m} locale={locale} />
         <Text style={s.h2}>{t.prioritiesTitle}</Text>
 
         {priorities.map((a, i) => (
@@ -184,24 +187,26 @@ export function ReportDocument({ result, resultUrl, contactEmail, siteUrl, image
           <Text style={[s.small, { marginTop: 6 }]}>{resultUrl}</Text>
         </View>
 
-        <Footer />
+        <Footer m={m} />
       </Page>
     </Document>
   );
 }
 
-function Header({ result, logo }: { result: PublicResult; logo: Buffer }) {
+function Header({ result, logo, m, locale }: { result: PublicResult; logo: Buffer; m: Messages; locale: Locale }) {
   return (
     <View style={s.header}>
       {/* Logo officiel : 2500×834 → 3:1 */}
       {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de react-pdf : pas d'attribut alt */}
       <Image src={logo} style={{ width: 108, height: 36 }} />
-      <Meta result={result} />
+      <Meta result={result} m={m} locale={locale} />
     </View>
   );
 }
 
-function Meta({ result }: { result: PublicResult }) {
+function Meta({ result, m, locale }: { result: PublicResult; m: Messages; locale: Locale }) {
+  const t = m.pdf;
+  const dateFmt = new Intl.DateTimeFormat(INTL_LOCALES[locale], { dateStyle: "long", timeZone: "Europe/Rome" });
   return (
     <View style={{ marginBottom: 18 }}>
       <Text style={s.meta}>
@@ -214,11 +219,11 @@ function Meta({ result }: { result: PublicResult }) {
   );
 }
 
-function Footer() {
+function Footer({ m }: { m: Messages }) {
   return (
     <View style={s.footer} fixed>
       <Text>{m.common.footer}</Text>
-      <Text render={({ pageNumber, totalPages }) => t.page(pageNumber, totalPages)} />
+      <Text render={({ pageNumber, totalPages }) => m.pdf.page(pageNumber, totalPages)} />
     </View>
   );
 }

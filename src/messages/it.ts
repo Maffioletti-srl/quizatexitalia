@@ -1,9 +1,11 @@
 /**
- * Textes de l'interface (italien).
- * Pour ajouter l'anglais : créer en.ts avec la même forme (type Messages)
- * et le sélectionner dans messages/index.ts.
- * Le contenu métier (domande, aree, raccomandazioni) est dans config/questions.ts.
+ * Textes de l'interface — italien, langue de référence.
+ * en.ts et fr.ts ont la même forme (type Messages) : toute clé ajoutée ici
+ * doit y être traduite (le typecheck le signale).
+ * Le contenu métier (domande, aree, raccomandazioni) est dans config/questions.ts
+ * (italien) et config/content/{en,fr}.ts (traductions).
  */
+import type { Paese, Ruolo, Settore } from "@/config/lead";
 import type { LevelId } from "@/lib/scoring";
 
 export const it = {
@@ -11,12 +13,20 @@ export const it = {
     title: "Scorecard sicurezza Ex — Atex Italia",
     description:
       "Quanto è sicuro e conforme il tuo impianto in atmosfera esplosiva? 12 domande, circa 5 minuti: punteggio di maturità, profilo per area e priorità d'intervento.",
+    quizTitle: "Valutazione — Scorecard sicurezza Ex",
+    resultsTitle: "Risultati — Scorecard sicurezza Ex",
   },
   common: {
     brand: "Atex Italia",
     logoAlt: "Atex Italia",
     privacyLink: "Privacy",
     footer: "Atex Italia · Gruppo Maffioletti · Osio Sotto (BG)",
+    legal: "Atex Italia è un brand di Maffioletti S.r.l.",
+    vatLabel: "P. IVA",
+    phoneLabel: "Tel.",
+    emailLabel: "Email",
+    linkedinLabel: "Atex Italia su LinkedIn",
+    languageLabel: "Lingua",
   },
   landing: {
     eyebrow: "Autovalutazione gratuita · ATEX / IECEx",
@@ -65,6 +75,11 @@ export const it = {
       "Energia",
       "Alimentare",
     ],
+    audienceShort: "Responsabili di stabilimento, HSE e RSPP, manutenzione e ingegneria, nei settori:",
+    carouselLabel: "Informazioni sulla scorecard",
+    carouselPause: "Metti in pausa lo scorrimento",
+    carouselPlay: "Riprendi lo scorrimento",
+    carouselGoTo: (n: number, total: number) => `Mostra le schede ${n} di ${total}`,
     howTitle: "Come funziona",
     howSteps: [
       "Rispondi a 12 domande sulla gestione Ex del tuo impianto.",
@@ -145,6 +160,8 @@ export const it = {
     ctaExpert: "Parla con un esperto",
     ctaPdf: "Scarica il report PDF",
     mailSubject: "Scorecard sicurezza Ex — richiesta di contatto",
+    mailBody: (score: number, level: string, url: string) =>
+      `Buongiorno,\n\nho completato la Scorecard sicurezza Ex (punteggio ${score}%, livello ${level}) e vorrei parlarne con un vostro tecnico.\n\nRisultato: ${url}\n`,
     disclaimer:
       "Punteggio indicativo basato sulle risposte fornite. Non costituisce una valutazione di conformità né sostituisce le verifiche previste dalla normativa.",
     restart: "Rifai la valutazione",
@@ -188,6 +205,55 @@ export const it = {
     contact: "Contatti",
     disclaimerTitle: "Avvertenza",
     page: (n: number, total: number) => `Pagina ${n} di ${total}`,
+  },
+  report: {
+    tempError: "Errore temporaneo, riprova.",
+    renderError: "Errore nella generazione del report.",
+  },
+  /** Libellés affichés des listes du formulaire (les valeurs enregistrées restent en italien). */
+  lead: {
+    ruoli: {
+      "Direzione / Titolare": "Direzione / Titolare",
+      "Responsabile di stabilimento": "Responsabile di stabilimento",
+      "HSE / RSPP": "HSE / RSPP",
+      Manutenzione: "Manutenzione",
+      "Ingegneria / Progettazione": "Ingegneria / Progettazione",
+      "Servizio tecnico / Strumentazione": "Servizio tecnico / Strumentazione",
+      Acquisti: "Acquisti",
+      Qualità: "Qualità",
+      Consulente: "Consulente",
+      Altro: "Altro",
+    } satisfies Record<Ruolo, string>,
+    settori: {
+      "Chimica e petrolchimica": "Chimica e petrolchimica",
+      "Oil & gas": "Oil & gas",
+      Manifatturiero: "Manifatturiero",
+      Farmaceutico: "Farmaceutico",
+      Energia: "Energia",
+      Alimentare: "Alimentare",
+      "Trattamento acque e rifiuti": "Trattamento acque e rifiuti",
+      Altro: "Altro",
+    } satisfies Record<Settore, string>,
+    paesi: {
+      Italia: "Italia",
+      Svizzera: "Svizzera",
+      "San Marino": "San Marino",
+      Austria: "Austria",
+      Belgio: "Belgio",
+      Croazia: "Croazia",
+      Francia: "Francia",
+      Germania: "Germania",
+      Grecia: "Grecia",
+      "Paesi Bassi": "Paesi Bassi",
+      Polonia: "Polonia",
+      Portogallo: "Portogallo",
+      "Regno Unito": "Regno Unito",
+      Romania: "Romania",
+      Slovenia: "Slovenia",
+      Spagna: "Spagna",
+      "Altro paese europeo": "Altro paese europeo",
+      "Paese extraeuropeo": "Paese extraeuropeo",
+    } satisfies Record<Paese, string>,
   },
   resultError: {
     title: "Impossibile caricare il risultato",

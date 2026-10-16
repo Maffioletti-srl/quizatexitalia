@@ -1,14 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { btnPrimary } from "@/components/ui";
-import { leadFieldsSchema } from "@/lib/lead-schema";
+import { useLocale, useMessages } from "@/i18n/client";
+import { localePath } from "@/i18n/config";
+import { createLeadFieldsSchema } from "@/lib/lead-schema";
 import { savePrefill } from "@/lib/prefill";
-import { m } from "@/messages";
-
-const t = m.landing;
-const startSchema = leadFieldsSchema.pick({ azienda: true, email: true });
 
 type Field = "azienda" | "email";
 
@@ -21,6 +19,13 @@ const START_FORM_ID = "inizia";
  */
 export function HeroStartForm() {
   const router = useRouter();
+  const locale = useLocale();
+  const m = useMessages();
+  const t = m.landing;
+  const startSchema = useMemo(
+    () => createLeadFieldsSchema(m.form.errors).pick({ azienda: true, email: true }),
+    [m],
+  );
   const [values, setValues] = useState<Record<Field, string>>({ azienda: "", email: "" });
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const refs = { azienda: useRef<HTMLInputElement>(null), email: useRef<HTMLInputElement>(null) };
@@ -42,7 +47,7 @@ export function HeroStartForm() {
       return;
     }
     savePrefill(res.data);
-    router.push("/valutazione");
+    router.push(localePath(locale, "/valutazione"));
   };
 
   const set = (f: Field, v: string) => {
@@ -81,44 +86,19 @@ export function HeroStartForm() {
   );
 
   return (
-    <form id={START_FORM_ID} onSubmit={onSubmit} noValidate className="mt-8 max-w-xl scroll-mt-24 space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+    <form id={START_FORM_ID} onSubmit={onSubmit} noValidate className="scroll-mt-24">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-start">
         {field("azienda", "text", "organization", t.startForm.azienda, t.startForm.aziendaPlaceholder)}
         {field("email", "email", "email", t.startForm.email, t.startForm.emailPlaceholder)}
-      </div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <button type="submit" className={`${btnPrimary} text-lg`}>
+        {/* Aligné sur les champs : hauteur du label + marge */}
+        <button type="submit" className={`${btnPrimary} h-[2.875rem] px-5 py-0 sm:col-span-2 lg:col-span-1 lg:mt-[1.625rem]`}>
           {t.cta}
           <span aria-hidden="true">→</span>
         </button>
-        <p className="text-sm text-muted">{t.duration}</p>
       </div>
-      <p className="text-xs text-muted">{t.startForm.note}</p>
+      <p className="mt-2.5 text-xs text-muted md:short:hidden">
+        {t.duration} · {t.startForm.note}
+      </p>
     </form>
-  );
-}
-
-/**
- * Bouton « Inizia la valutazione » du bas de page : remonte au formulaire du
- * hero et place le curseur dans « Azienda » (sans JS : simple ancre #inizia).
- */
-export function ScrollToStartButton({ className, children }: { className?: string; children: ReactNode }) {
-  return (
-    <a
-      href={`#${START_FORM_ID}`}
-      className={className}
-      onClick={(e) => {
-        const input = document.getElementById("start-azienda");
-        if (!input) return;
-        e.preventDefault();
-        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        document
-          .getElementById(START_FORM_ID)
-          ?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
-        input.focus({ preventScroll: true });
-      }}
-    >
-      {children}
-    </a>
   );
 }

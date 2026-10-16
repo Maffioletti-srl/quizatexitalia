@@ -1,9 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { QUIZ_VERSION } from "@/config/questions";
-import { leadRequestSchema, type LeadErrorCode, type LeadResponse } from "@/lib/lead-schema";
+import { DEFAULT_LOCALE, hasLocale } from "@/i18n/config";
+import { createLeadRequestSchema, type LeadErrorCode, type LeadResponse } from "@/lib/lead-schema";
 import { InvalidAnswersError, computeScores, snapshotAnswers } from "@/lib/scoring";
 import { hasRecentSubmission, insertLead } from "@/lib/server/leads";
 import { verifyTurnstile } from "@/lib/server/turnstile";
+import { getMessages } from "@/messages";
 
 // Runtime Node.js : c'est le défaut (l'option `runtime` est incompatible avec cacheComponents).
 
@@ -19,7 +21,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return fail("invalid", 400);
   }
-  const raw = (body ?? {}) as { turnstileToken?: unknown; website?: unknown };
+  const raw = (body ?? {}) as { turnstileToken?: unknown; website?: unknown; locale?: unknown };
 
   // 1. Turnstile (vérification serveur)
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
@@ -34,8 +36,9 @@ export async function POST(req: NextRequest) {
     return fail("invalid", 400);
   }
 
-  // 3. Validation Zod
-  const parsed = leadRequestSchema.safeParse(body);
+  // 3. Validation Zod (messages d'erreur dans la langue de l'interface)
+  const locale = typeof raw.locale === "string" && hasLocale(raw.locale) ? raw.locale : DEFAULT_LOCALE;
+  const parsed = createLeadRequestSchema(getMessages(locale).form.errors).safeParse(body);
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
     for (const issue of parsed.error.issues) {
