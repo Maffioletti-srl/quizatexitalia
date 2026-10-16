@@ -3,13 +3,15 @@ import path from "node:path";
 import { createElement, type ReactElement } from "react";
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import { contactEmail, site } from "@/config/site";
+import { DEFAULT_LOCALE, hasLocale, localePath } from "@/i18n/config";
 import { isUuid } from "@/lib/results";
 import { getPublicResult } from "@/lib/server/results";
-import { m } from "@/messages";
+import { getMessages } from "@/messages";
 import { ReportDocument } from "@/pdf/ReportDocument";
 
 /**
- * GET /api/report/[id] — le rapport PDF d'un résultat.
+ * GET /api/report/[id]?lang=en — le rapport PDF d'un résultat, dans la
+ * langue demandée (italien par défaut).
  * Même règle que la page : l'UUID non devinable suffit, et le document ne
  * contient que des scores (aucune donnée personnelle).
  * Les images de public/ sont incluses dans le bundle via
@@ -26,8 +28,11 @@ function loadImages() {
   return images;
 }
 
-export async function GET(_req: Request, ctx: RouteContext<"/api/report/[id]">) {
+export async function GET(req: Request, ctx: RouteContext<"/api/report/[id]">) {
   const { id } = await ctx.params;
+  const lang = new URL(req.url).searchParams.get("lang");
+  const locale = hasLocale(lang) ? lang : DEFAULT_LOCALE;
+  const m = getMessages(locale);
   if (!isUuid(id)) return new Response("Not found", { status: 404 });
 
   let result;
@@ -35,14 +40,15 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/report/[id]">) 
     result = await getPublicResult(id);
   } catch (err) {
     console.error("[report] lecture du résultat", err);
-    return new Response("Errore temporaneo, riprova.", { status: 503 });
+    return new Response(m.report.tempError, { status: 503 });
   }
   if (!result) return new Response("Not found", { status: 404 });
 
   try {
     const doc = createElement(ReportDocument, {
+      locale,
       result,
-      resultUrl: `${site.url}/risultati/${result.id}`,
+      resultUrl: `${site.url}${localePath(locale, `/risultati/${result.id}`)}`,
       contactEmail: contactEmail(),
       siteUrl: site.mainSiteUrl,
       images: await loadImages(),
@@ -59,6 +65,6 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/report/[id]">) 
     });
   } catch (err) {
     console.error("[report] génération du PDF", err);
-    return new Response("Errore nella generazione del report.", { status: 500 });
+    return new Response(m.report.renderError, { status: 500 });
   }
 }

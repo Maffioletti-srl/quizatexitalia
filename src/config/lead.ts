@@ -1,6 +1,7 @@
 /**
- * Listes du formulaire lead. Les libellés sont enregistrés tels quels
- * dans quiz_leads (lisibles dans Nexo) : ne pas les renommer à la légère.
+ * Listes du formulaire lead. Les valeurs (italien) sont enregistrées telles
+ * quelles dans quiz_leads (lisibles dans Nexo) : ne pas les renommer à la
+ * légère. Les libellés affichés sont traduits dans messages/*.ts (lead.*).
  */
 
 export const SETTORI = [
@@ -47,6 +48,10 @@ export const PAESI = [
   "Altro paese europeo",
   "Paese extraeuropeo",
 ] as const;
+
+export type Settore = (typeof SETTORI)[number];
+export type Ruolo = (typeof RUOLI)[number];
+export type Paese = (typeof PAESI)[number];
 
 export const DEFAULT_PAESE: (typeof PAESI)[number] = "Italia";
 

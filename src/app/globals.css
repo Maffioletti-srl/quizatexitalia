@@ -58,6 +58,11 @@ body {
   animation: fade-up 0.35s ease-out both;
 }
 
+/* Écrans peu hauts (portables) : la home tient sans scroll en compactant le hero */
+@custom-variant short (@media (max-height: 760px));
+/* Desktop pas assez haut pour les cartes complètes : version compacte */
+@custom-variant compact (@media (min-width: 48rem) and (max-height: 899px));
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

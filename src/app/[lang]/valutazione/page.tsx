@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { QuizLoader } from "@/components/quiz/QuizLoader";
 import { SiteHeader } from "@/components/SiteHeader";
 import { TrackingCapture } from "@/components/TrackingCapture";
+import { getLocale } from "@/i18n/server";
+import { getMessages } from "@/messages";
 
-export const metadata: Metadata = {
-  title: "Valutazione — Scorecard sicurezza Ex",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: getMessages(await getLocale()).meta.quizTitle };
+}
 
 export default function ValutazionePage() {
   return (

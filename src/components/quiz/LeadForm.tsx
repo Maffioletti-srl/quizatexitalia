@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { DEFAULT_PAESE, PAESI, RUOLI, SETTORI } from "@/config/lead";
 import { site } from "@/config/site";
 import { btnPrimary, btnSecondary } from "@/components/ui";
+import { useLocale, useMessages } from "@/i18n/client";
 import {
-  leadFieldsSchema,
+  createLeadFieldsSchema,
   type LeadErrorCode,
   type LeadFieldName,
   type LeadFields,
@@ -14,10 +15,9 @@ import {
 import type { Answers } from "@/lib/scoring";
 import { readPrefill } from "@/lib/prefill";
 import { getTracking } from "@/lib/tracking";
-import { m } from "@/messages";
+import type { Messages } from "@/messages";
 import { Turnstile, type TurnstileHandle } from "./Turnstile";
 
-const t = m.form;
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
 type Values = {
@@ -59,19 +59,20 @@ const FIELD_ORDER: LeadFieldName[] = [
   "consensoPrivacy",
 ];
 
-const SERVER_ERRORS: Record<LeadErrorCode, string> = {
-  invalid: t.errors.server,
-  validation: t.errors.summary,
-  turnstile: t.errors.turnstile,
-  answers: t.errors.answers,
-  too_soon: t.errors.tooSoon,
-  server: t.errors.server,
-};
+const serverErrors = (e: Messages["form"]["errors"]): Record<LeadErrorCode, string> => ({
+  invalid: e.server,
+  validation: e.summary,
+  turnstile: e.turnstile,
+  answers: e.answers,
+  too_soon: e.tooSoon,
+  server: e.server,
+});
 
 type FieldErrors = Partial<Record<LeadFieldName, string>>;
+type FieldsSchema = ReturnType<typeof createLeadFieldsSchema>;
 
-function validate(values: Values): FieldErrors {
-  const res = leadFieldsSchema.safeParse(values as unknown as LeadFields);
+function validateWith(schema: FieldsSchema, values: Values): FieldErrors {
+  const res = schema.safeParse(values as unknown as LeadFields);
   if (res.success) return {};
   const errors: FieldErrors = {};
   for (const issue of res.error.issues) {
@@ -88,6 +89,11 @@ interface Props {
 }
 
 export function LeadForm({ answers, onBack, onSuccess }: Props) {
+  const locale = useLocale();
+  const m = useMessages();
+  const t = m.form;
+  const schema = useMemo(() => createLeadFieldsSchema(m.form.errors), [m]);
+  const validate = (v: Values) => validateWith(schema, v);
   // Azienda et email saisis dans le hero de la landing, s'il y en a.
   const [values, setValues] = useState<Values>(() => {
     const p = readPrefill();
@@ -148,6 +154,7 @@ export function LeadForm({ answers, onBack, onSuccess }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           lead: values,
+          locale,
           answers,
           tracking: getTracking(),
           turnstileToken: token,
@@ -165,7 +172,7 @@ export function LeadForm({ answers, onBack, onSuccess }: Props) {
         setErrors(data.fieldErrors as FieldErrors);
         focusFirstError(data.fieldErrors as FieldErrors);
       }
-      setFormError(SERVER_ERRORS[code]);
+      setFormError(serverErrors(t.errors)[code]);
     } catch {
       setFormError(t.errors.network);
     }
@@ -192,7 +199,12 @@ export function LeadForm({ answers, onBack, onSuccess }: Props) {
     </Field>
   );
 
-  const selectField = (name: "ruolo" | "settore" | "paese", options: readonly string[]) => (
+  // Valeurs enregistrées en italien, libellés affichés traduits
+  const selectField = (
+    name: "ruolo" | "settore" | "paese",
+    options: readonly string[],
+    labels: Record<string, string>,
+  ) => (
     <Field name={name} label={t.fields[name]} required error={errors[name]}>
       {(a11y) => (
         <select
@@ -207,7 +219,7 @@ export function LeadForm({ answers, onBack, onSuccess }: Props) {
           </option>
           {options.map((o) => (
             <option key={o} value={o}>
-              {o}
+              {labels[o] ?? o}
             </option>
           ))}
         </select>
@@ -232,11 +244,11 @@ export function LeadForm({ answers, onBack, onSuccess }: Props) {
         {textField("email", { type: "email", autoComplete: "email", hint: t.fields.emailHint })}
         {textField("azienda", { autoComplete: "organization" })}
         <div className="grid gap-5 sm:grid-cols-2">
-          {selectField("ruolo", RUOLI)}
-          {selectField("settore", SETTORI)}
+          {selectField("ruolo", RUOLI, m.lead.ruoli)}
+          {selectField("settore", SETTORI, m.lead.settori)}
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
-          {selectField("paese", PAESI)}
+          {selectField("paese", PAESI, m.lead.paesi)}
           {textField("telefono", { type: "tel", autoComplete: "tel", inputMode: "tel" })}
         </div>
 
@@ -281,7 +293,7 @@ export function LeadForm({ answers, onBack, onSuccess }: Props) {
 
         <div aria-label={t.turnstileLabel} role="group">
           {TURNSTILE_SITE_KEY ? (
-            <Turnstile ref={turnstile} siteKey={TURNSTILE_SITE_KEY} onToken={setToken} />
+            <Turnstile ref={turnstile} siteKey={TURNSTILE_SITE_KEY} language={locale} onToken={setToken} />
           ) : (
             <p className="text-sm text-level-critico">NEXT_PUBLIC_TURNSTILE_SITE_KEY manquant</p>
           )}
@@ -334,6 +346,7 @@ interface FieldProps {
 }
 
 function Field({ name, label, required, error, hint, children }: FieldProps) {
+  const m = useMessages();
   const id = `f-${name}`;
   const describedBy = [hint && `${id}-hint`, error && `${id}-err`].filter(Boolean).join(" ") || undefined;
   return (

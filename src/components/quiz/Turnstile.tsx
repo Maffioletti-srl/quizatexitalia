@@ -40,12 +40,14 @@ export interface TurnstileHandle {
 
 interface Props {
   siteKey: string;
+  /** Langue du widget (it, en, fr). */
+  language: string;
   onToken: (token: string) => void;
   ref?: Ref<TurnstileHandle>;
 }
 
-/** Widget Cloudflare Turnstile (rendu explicite, thème clair, italien). */
-export function Turnstile({ siteKey, onToken, ref }: Props) {
+/** Widget Cloudflare Turnstile (rendu explicite, thème clair, langue du site). */
+export function Turnstile({ siteKey, language, onToken, ref }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   // Toujours appeler la dernière version du callback sans re-rendre le widget
@@ -69,7 +71,7 @@ export function Turnstile({ siteKey, onToken, ref }: Props) {
         widgetId.current = window.turnstile.render(container.current, {
           sitekey: siteKey,
           theme: "light",
-          language: "it",
+          language,
           size: "flexible",
           callback: (token: string) => onTokenRef.current(token),
           "expired-callback": () => onTokenRef.current(""),
@@ -83,7 +85,7 @@ export function Turnstile({ siteKey, onToken, ref }: Props) {
       if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current);
       widgetId.current = null;
     };
-  }, [siteKey]);
+  }, [siteKey, language]);
 
   return <div ref={container} className="min-h-[65px]" />;
 }

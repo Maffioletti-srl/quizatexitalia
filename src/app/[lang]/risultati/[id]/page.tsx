@@ -2,24 +2,26 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { AREAS } from "@/config/questions";
+import { getAreas } from "@/config/content";
 import { contactEmail, site } from "@/config/site";
 import { AreaRadar } from "@/components/results/AreaRadar";
 import { ScoreRing } from "@/components/results/ScoreRing";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { btnPrimary, btnSecondary, card } from "@/components/ui";
+import { INTL_LOCALES, localePath } from "@/i18n/config";
+import { getLocale } from "@/i18n/server";
 import { getPublicResult } from "@/lib/server/results";
 import type { LevelId } from "@/lib/scoring";
-import { m } from "@/messages";
+import { getMessages } from "@/messages";
 
-const t = m.results;
-
-export const metadata: Metadata = {
-  title: "Risultati — Scorecard sicurezza Ex",
-  // Les pages de résultats ne sont jamais indexées.
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: getMessages(await getLocale()).meta.resultsTitle,
+    // Les pages de résultats ne sont jamais indexées.
+    robots: { index: false, follow: false },
+  };
+}
 
 // Classes explicites (Tailwind ne détecte pas les classes construites dynamiquement)
 const LEVEL_TEXT: Record<LevelId, string> = {
@@ -29,9 +31,7 @@ const LEVEL_TEXT: Record<LevelId, string> = {
   eccellente: "text-level-eccellente",
 };
 
-const dateFormat = new Intl.DateTimeFormat("it-IT", { dateStyle: "long" });
-
-export default function RisultatiPage({ params }: PageProps<"/risultati/[id]">) {
+export default function RisultatiPage({ params }: PageProps<"/[lang]/risultati/[id]">) {
   return (
     <>
       <SiteHeader />
@@ -58,18 +58,24 @@ function ResultSkeleton() {
   );
 }
 
-async function ResultContent({ params }: { params: PageProps<"/risultati/[id]">["params"] }) {
+async function ResultContent({ params }: { params: PageProps<"/[lang]/risultati/[id]">["params"] }) {
   const { id } = await params;
   const result = await getPublicResult(id);
   if (!result) notFound();
 
-  const level = m.levels[result.level];
-  const radarData = AREAS.map((a) => ({ area: a.shortTitle, score: result.areas[a.id] }));
-  const priorities = result.weakest.map((areaId) => AREAS.find((a) => a.id === areaId)!);
+  const locale = await getLocale();
+  const m = getMessages(locale);
+  const t = m.results;
+  const areas = getAreas(locale);
+  const dateFormat = new Intl.DateTimeFormat(INTL_LOCALES[locale], { dateStyle: "long" });
 
-  const resultUrl = `${site.url}/risultati/${result.id}`;
+  const level = m.levels[result.level];
+  const radarData = areas.map((a) => ({ area: a.shortTitle, score: result.areas[a.id] }));
+  const priorities = result.weakest.map((areaId) => areas.find((a) => a.id === areaId)!);
+
+  const resultUrl = `${site.url}${localePath(locale, `/risultati/${result.id}`)}`;
   const mailto = `mailto:${contactEmail()}?subject=${encodeURIComponent(t.mailSubject)}&body=${encodeURIComponent(
-    `Buongiorno,\n\nho completato la Scorecard sicurezza Ex (punteggio ${result.total}%, livello ${level.label}) e vorrei parlarne con un vostro tecnico.\n\nRisultato: ${resultUrl}\n`,
+    t.mailBody(result.total, level.label, resultUrl),
   )}`;
 
   return (
@@ -123,7 +129,7 @@ async function ResultContent({ params }: { params: PageProps<"/risultati/[id]">[
           {t.areaScoresTitle}
         </h2>
         <ul className="mt-4 grid gap-x-10 gap-y-4 sm:grid-cols-2">
-          {AREAS.map((a) => (
+          {areas.map((a) => (
             <li key={a.id}>
               <div className="flex justify-between gap-4 text-sm">
                 <span>{a.title}</span>
@@ -180,14 +186,14 @@ async function ResultContent({ params }: { params: PageProps<"/risultati/[id]">[
           <a href={mailto} className={btnPrimary}>
             {t.ctaExpert}
           </a>
-          <a href={`/api/report/${result.id}`} className={btnSecondary} download>
+          <a href={`/api/report/${result.id}?lang=${locale}`} className={btnSecondary} download>
             {t.ctaPdf}
           </a>
         </div>
       </section>
 
       <p className="mt-10 text-center">
-        <Link href="/valutazione?nuova=1" className="text-sm text-muted underline underline-offset-4 hover:text-ink">
+        <Link href={localePath(locale, "/valutazione?nuova=1")} className="text-sm text-muted underline underline-offset-4 hover:text-ink">
           {t.restart}
         </Link>
       </p>
