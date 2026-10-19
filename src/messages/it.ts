@@ -24,7 +24,7 @@ export const it = {
     legal: "Atex Italia è un brand di Maffioletti S.r.l.",
     vatLabel: "P. IVA",
     phoneLabel: "Tel.",
-    emailLabel: "Email",
+    contactLabel: "Contattaci",
     linkedinLabel: "Atex Italia su LinkedIn",
     languageLabel: "Lingua",
   },
@@ -163,9 +163,6 @@ export const it = {
       "Un nostro tecnico può aiutarti a leggere il punteggio e a definire un piano d'azione per il tuo impianto.",
     ctaExpert: "Parla con un esperto",
     ctaPdf: "Scarica il report PDF",
-    mailSubject: "Scorecard sicurezza Ex — richiesta di contatto",
-    mailBody: (score: number, level: string, url: string) =>
-      `Buongiorno,\n\nho completato la Scorecard sicurezza Ex (punteggio ${score}%, livello ${level}) e vorrei parlarne con un vostro tecnico.\n\nRisultato: ${url}\n`,
     disclaimer:
       "Punteggio indicativo basato sulle risposte fornite. Non costituisce una valutazione di conformità né sostituisce le verifiche previste dalla normativa.",
     restart: "Rifai la valutazione",

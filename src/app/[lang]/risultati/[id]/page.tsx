@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getAreas } from "@/config/content";
-import { contactEmail, site } from "@/config/site";
+import { site } from "@/config/site";
 import { AreaRadar } from "@/components/results/AreaRadar";
 import { ScoreRing } from "@/components/results/ScoreRing";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -72,11 +72,6 @@ async function ResultContent({ params }: { params: PageProps<"/[lang]/risultati/
   const level = m.levels[result.level];
   const radarData = areas.map((a) => ({ area: a.shortTitle, score: result.areas[a.id] }));
   const priorities = result.weakest.map((areaId) => areas.find((a) => a.id === areaId)!);
-
-  const resultUrl = `${site.url}${localePath(locale, `/risultati/${result.id}`)}`;
-  const mailto = `mailto:${contactEmail()}?subject=${encodeURIComponent(t.mailSubject)}&body=${encodeURIComponent(
-    t.mailBody(result.total, level.label, resultUrl),
-  )}`;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
@@ -183,7 +178,7 @@ async function ResultContent({ params }: { params: PageProps<"/[lang]/risultati/
         </h2>
         <p className="mt-2 max-w-2xl text-muted">{t.ctaText}</p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <a href={mailto} className={btnPrimary}>
+          <a href={site.contactUrl} target="_blank" rel="noopener" className={btnPrimary}>
             {t.ctaExpert}
           </a>
           <a href={`/api/report/${result.id}?lang=${locale}`} className={btnSecondary} download>

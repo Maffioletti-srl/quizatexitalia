@@ -25,12 +25,14 @@ export async function SiteFooter() {
           <a className={link} href={site.privacyUrl}>
             {m.common.privacyLink}
           </a>
-          {/* Icônes : email et LinkedIn côte à côte */}
+          {/* Icônes : contact (page contatti, un mailto échoue sans messagerie) et LinkedIn */}
           <div className="flex items-center gap-2">
             <a
-              href={`mailto:${site.email}`}
-              aria-label={`${m.common.emailLabel}: ${site.email}`}
-              title={site.email}
+              href={site.contactUrl}
+              target="_blank"
+              rel="noopener"
+              aria-label={m.common.contactLabel}
+              title={m.common.contactLabel}
               className="block p-0.5 transition-colors hover:text-ink"
             >
               <svg

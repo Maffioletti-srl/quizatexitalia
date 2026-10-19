@@ -19,7 +19,7 @@ export const en: Messages = {
     legal: "Atex Italia is a brand of Maffioletti S.r.l.",
     vatLabel: "VAT No.",
     phoneLabel: "Tel.",
-    emailLabel: "Email",
+    contactLabel: "Contact us",
     linkedinLabel: "Atex Italia on LinkedIn",
     languageLabel: "Language",
   },
@@ -158,9 +158,6 @@ export const en: Messages = {
       "One of our technical specialists can help you interpret your score and define an action plan for your plant.",
     ctaExpert: "Talk to an expert",
     ctaPdf: "Download the PDF report",
-    mailSubject: "Ex Safety Scorecard — contact request",
-    mailBody: (score: number, level: string, url: string) =>
-      `Hello,\n\nI have completed the Ex Safety Scorecard (score ${score}%, level ${level}) and would like to discuss it with one of your technical specialists.\n\nResult: ${url}\n`,
     disclaimer:
       "Indicative score based on the answers provided. It does not constitute a conformity assessment, nor does it replace the inspections required by applicable regulations.",
     restart: "Retake the assessment",
