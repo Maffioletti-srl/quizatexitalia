@@ -7,6 +7,7 @@ import {
   AREAS,
   MAX_WEIGHT,
   QUESTIONS,
+  QUESTIONS_PER_AREA,
   type Area,
   type AreaId,
   type Question,
@@ -48,12 +49,58 @@ export function levelFor(score: number): LevelId {
 }
 
 /**
+ * Tire QUESTIONS_PER_AREA questions au hasard dans chaque area de la banque,
+ * dans l'ordre des aree (la progression du questionnaire suit les aree).
+ */
+export function drawQuestionIds(
+  random: () => number = Math.random,
+  questions: readonly Question[] = QUESTIONS,
+  areas: readonly Area[] = AREAS,
+): string[] {
+  return areas.flatMap((area) => {
+    const pool = questions.filter((q) => q.areaId === area.id).map((q) => q.id);
+    // Fisher-Yates partiel : seuls les QUESTIONS_PER_AREA premiers comptent
+    for (let i = 0; i < QUESTIONS_PER_AREA && i < pool.length; i++) {
+      const j = i + Math.floor(random() * (pool.length - i));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, QUESTIONS_PER_AREA);
+  });
+}
+
+/**
+ * Questions auxquelles l'utilisateur a répondu, dans l'ordre de la banque.
+ * Les réponses doivent couvrir exactement QUESTIONS_PER_AREA questions par
+ * area : c'est ce qui rend les scores comparables d'un tirage à l'autre.
+ */
+export function selectedQuestions(
+  answers: Answers,
+  questions: readonly Question[] = QUESTIONS,
+  areas: readonly Area[] = AREAS,
+): Question[] {
+  const ids = new Set(questions.map((q) => q.id));
+  for (const questionId of Object.keys(answers)) {
+    if (!ids.has(questionId)) {
+      throw new InvalidAnswersError(`Domanda sconosciuta: ${questionId}`);
+    }
+  }
+  const selected = questions.filter((q) => q.id in answers);
+  for (const area of areas) {
+    const count = selected.filter((q) => q.areaId === area.id).length;
+    if (count !== QUESTIONS_PER_AREA) {
+      throw new InvalidAnswersError(`Numero di risposte errato per ${area.id}: ${count}`);
+    }
+  }
+  return selected;
+}
+
+/**
  * Vérifie que chaque question a exactement une réponse valide
  * et qu'aucune question inconnue n'est présente.
  */
 export function validateAnswers(
   answers: Answers,
-  questions: readonly Question[] = QUESTIONS,
+  questions: readonly Question[] = selectedQuestions(answers),
 ): void {
   const byId = new Map(questions.map((q) => [q.id, q]));
 
@@ -75,7 +122,7 @@ export function validateAnswers(
 
 export function computeScores(
   answers: Answers,
-  questions: readonly Question[] = QUESTIONS,
+  questions: readonly Question[] = selectedQuestions(answers),
   areas: readonly Area[] = AREAS,
 ): ScoreResult {
   validateAnswers(answers, questions);
@@ -137,7 +184,7 @@ export interface AnswerSnapshot {
  */
 export function snapshotAnswers(
   answers: Answers,
-  questions: readonly Question[] = QUESTIONS,
+  questions: readonly Question[] = selectedQuestions(answers),
   areas: readonly Area[] = AREAS,
 ): AnswerSnapshot[] {
   validateAnswers(answers, questions);
