@@ -3,6 +3,8 @@ export const site = {
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://quiz.atexitalia.it",
   privacyUrl: process.env.NEXT_PUBLIC_PRIVACY_URL || "https://www.atexitalia.it/privacy",
   mainSiteUrl: "https://www.atexitalia.it",
+  /** Cible du CTA « Parla con un esperto » de la page résultats. */
+  contactUrl: "https://www.atexitalia.it/contatti/",
   /** Coordonnées affichées dans le footer (source : atexitalia.it/contatti). */
   email: "info@atexitalia.it",
   phone: "+39 035 578 8848",
@@ -12,7 +14,7 @@ export const site = {
   indexable: process.env.NEXT_PUBLIC_INDEXABLE === "true",
 };
 
-/** Adresse du CTA « Parla con un esperto » — serveur uniquement. */
+/** Adresse de contact imprimée dans le report PDF — serveur uniquement. */
 export function contactEmail(): string {
   return process.env.CONTACT_EMAIL || "info@atexitalia.it";
 }

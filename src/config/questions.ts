@@ -79,7 +79,7 @@ export const AREAS: readonly Area[] = [
       name: "Supporto tecnico alla classificazione e al DPCE",
       description:
         "Affiancamento nella revisione della classificazione delle aree e nell'aggiornamento del documento sulla protezione contro le esplosioni.",
-      url: "https://www.atexitalia.it/servizi", // TODO : URL définitive + confirmer l'offre
+      url: "https://www.atexitalia.it/consulenza/classificazione-zone-atex/",
     },
   },
   {
@@ -94,7 +94,7 @@ export const AREAS: readonly Area[] = [
       name: "Prodotti certificati Ex",
       description:
         "Ampia gamma di apparecchiature e componenti certificati ATEX/IECEx, con supporto nella scelta in base a zona, gruppo e classe di temperatura.",
-      url: "https://www.atexitalia.it/prodotti", // TODO : URL définitive
+      url: "https://www.atexitalia.it/consulenza/",
     },
   },
   {
@@ -109,7 +109,7 @@ export const AREAS: readonly Area[] = [
       name: "Soluzioni Custom Ex",
       description:
         "Quadri, cassette e sistemi progettati su misura e certificati per le zone pericolose, con documentazione completa per il fascicolo d'impianto.",
-      url: "https://www.atexitalia.it/custom-ex", // TODO : URL définitive
+      url: "https://www.atexitalia.it/consulenza/progettazione-prodotti-ex/",
     },
   },
   {
@@ -124,7 +124,7 @@ export const AREAS: readonly Area[] = [
       name: "Verifiche e ispezioni Ex",
       description:
         "Ispezioni degli impianti in atmosfera esplosiva secondo EN/IEC 60079-17, con rapporto dettagliato e piano di azioni correttive.",
-      url: "https://www.atexitalia.it/verifiche-ispezioni", // TODO : URL définitive
+      url: "https://www.atexitalia.it/ispezioni/",
     },
   },
   {
@@ -139,7 +139,7 @@ export const AREAS: readonly Area[] = [
       name: "Assistenza, ricambi e riparazioni Ex",
       description:
         "Ricambi originali, assistenza tecnica e interventi sulle apparecchiature Ex nel rispetto della certificazione.",
-      url: "https://www.atexitalia.it/assistenza", // TODO : URL définitive + confirmer l'offre
+      url: "https://www.atexitalia.it/contatti/",
     },
   },
   {
@@ -154,7 +154,7 @@ export const AREAS: readonly Area[] = [
       name: "Atex Italia Academy",
       description:
         "Corsi di formazione sulle atmosfere esplosive per tecnici, manutentori, progettisti e responsabili HSE.",
-      url: "https://www.atexitalia.it/academy", // TODO : URL définitive
+      url: "https://www.atexitalia.it/formazione/",
     },
   },
 ];
