@@ -3,6 +3,7 @@ import {
   AREAS,
   MAX_WEIGHT,
   QUESTIONS,
+  QUESTIONS_PER_AREA,
   QUIZ_VERSION,
   type AreaId,
   type Weight,
@@ -10,16 +11,21 @@ import {
 import {
   InvalidAnswersError,
   computeScores,
+  drawQuestionIds,
   levelFor,
+  selectedQuestions,
   snapshotAnswers,
   validateAnswers,
   type Answers,
 } from "./scoring";
 
-/** Répond à chaque question avec l'option (hors « Non so ») du poids demandé. */
-function answerAll(weightFor: (questionId: string, areaId: AreaId) => Weight): Answers {
+/** Tirage de référence pour les tests : les 12 questions historiques q1…q12. */
+const BASE = QUESTIONS.filter((q) => Number(q.id.slice(1)) <= 12);
+
+/** Répond à chaque question du tirage avec l'option (hors « Non so ») du poids demandé. */
+function answerAll(weightFor: (questionId: string, areaId: AreaId) => Weight, questions = BASE): Answers {
   return Object.fromEntries(
-    QUESTIONS.map((q) => {
+    questions.map((q) => {
       const w = weightFor(q.id, q.areaId);
       const option = q.options.find((o) => o.weight === w && !o.unknown);
       if (!option) throw new Error(`Pas d'option de poids ${w} pour ${q.id}`);
@@ -33,11 +39,12 @@ describe("config questions", () => {
     expect(QUIZ_VERSION).toMatch(/^\d+\.\d+$/);
   });
 
-  it("contient 6 aree et 12 domande, 2 par area", () => {
+  it("contient 6 aree et une banque de 62 domande, au moins 10 par area", () => {
     expect(AREAS).toHaveLength(6);
-    expect(QUESTIONS).toHaveLength(12);
+    expect(QUESTIONS).toHaveLength(62);
+    expect(QUESTIONS_PER_AREA).toBe(2);
     for (const area of AREAS) {
-      expect(QUESTIONS.filter((q) => q.areaId === area.id)).toHaveLength(2);
+      expect(QUESTIONS.filter((q) => q.areaId === area.id).length).toBeGreaterThanOrEqual(10);
     }
   });
 
@@ -169,13 +176,51 @@ describe("validation des réponses", () => {
   });
 });
 
+describe("tirage des questions", () => {
+  it("tire 2 questions distinctes par area, dans l'ordre des aree", () => {
+    for (let i = 0; i < 50; i++) {
+      const ids = drawQuestionIds();
+      expect(ids).toHaveLength(12);
+      expect(new Set(ids).size).toBe(12);
+      const areaOrder = ids.map((id) => QUESTIONS.find((q) => q.id === id)!.areaId);
+      expect(areaOrder).toEqual(AREAS.flatMap((a) => [a.id, a.id]));
+    }
+  });
+
+  it("peut tirer chaque question de la banque", () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 2000; i++) drawQuestionIds().forEach((id) => seen.add(id));
+    expect(seen.size).toBe(QUESTIONS.length);
+  });
+
+  it("un tirage complet est accepté et noté", () => {
+    const ids = drawQuestionIds();
+    const drawn = QUESTIONS.filter((q) => ids.includes(q.id));
+    const r = computeScores(answerAll(() => 3, drawn));
+    expect(r.total).toBe(100);
+    expect(selectedQuestions(answerAll(() => 3, drawn)).map((q) => q.id).sort()).toEqual([...ids].sort());
+  });
+
+  it("refuse 3 réponses dans une area", () => {
+    const answers = { ...answerAll(() => 1), q13: "q13-a" };
+    expect(() => computeScores(answers)).toThrow(InvalidAnswersError);
+  });
+
+  it("refuse une area sans réponse suffisante", () => {
+    const answers = answerAll(() => 1);
+    delete answers.q1;
+    delete answers.q2;
+    expect(() => computeScores(answers)).toThrow(InvalidAnswersError);
+  });
+});
+
 describe("snapshotAnswers", () => {
   it("produit une entrée lisible par question, dans l'ordre", () => {
     const answers = answerAll(() => 2);
     answers.q12 = "q12-nonso";
     const snap = snapshotAnswers(answers);
     expect(snap).toHaveLength(12);
-    expect(snap.map((s) => s.domanda_id)).toEqual(QUESTIONS.map((q) => q.id));
+    expect(snap.map((s) => s.domanda_id)).toEqual(BASE.map((q) => q.id));
     expect(snap[0]).toMatchObject({
       domanda_id: "q1",
       area_id: "classificazione",

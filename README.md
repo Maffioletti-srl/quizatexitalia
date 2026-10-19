@@ -34,6 +34,10 @@ la query commentata in fondo al file.
 - **Non rinominare gli id** (`q1`, `q1-a`, …): sono salvati nelle risposte dei lead.
 - Ogni domanda deve avere i pesi 0, 1, 2, 3 una volta ciascuno (+ «Non so» = 0
   facoltativo): i test lo verificano (`npm test`).
+- `questions.ts` è una **banca di domande** (62): ogni valutazione ne estrae a caso
+  `QUESTIONS_PER_AREA` (2) per area, cioè 12. Ogni area deve averne almeno 2.
+- Ogni nuova domanda va tradotta in `src/config/content/en.ts` e `fr.ts`
+  (i test segnalano le traduzioni mancanti).
 - Livelli: 0–39 Critico · 40–64 Da migliorare · 65–84 Buono · 85–100 Eccellente.
 
 Per aggiungere l'inglese: creare `src/messages/en.ts` con la stessa forma di

@@ -4,40 +4,45 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { getAreas, getQuestions } from "@/config/content";
-import { QUESTIONS, QUIZ_VERSION } from "@/config/questions";
+import { AREAS, QUESTIONS, QUESTIONS_PER_AREA, QUIZ_VERSION } from "@/config/questions";
 import { btnPrimary, btnSecondary } from "@/components/ui";
-import type { Answers } from "@/lib/scoring";
+import { drawQuestionIds, type Answers } from "@/lib/scoring";
 import { readSession, removeSession, writeSession } from "@/lib/session-storage";
 import { useLocale, useMessages } from "@/i18n/client";
 import { localePath } from "@/i18n/config";
 import { LeadForm } from "./LeadForm";
 
 const STORAGE_KEY = "atex-quiz:state";
-const TOTAL = QUESTIONS.length;
+const TOTAL = AREAS.length * QUESTIONS_PER_AREA;
 /** Délai avant de passer à la question suivante après un clic souris. */
 const AUTO_ADVANCE_MS = 280;
 
 interface QuizState {
   version: string;
+  /** Questions tirées pour cette évaluation (conservées si la page est rechargée). */
+  questionIds: string[];
   /** 0…TOTAL-1 : questions ; TOTAL : formulaire. */
   step: number;
   answers: Answers;
 }
 
-const initialState: QuizState = { version: QUIZ_VERSION, step: 0, answers: {} };
+const newState = (): QuizState => ({ version: QUIZ_VERSION, questionIds: drawQuestionIds(), step: 0, answers: {} });
+
+const isValidDraw = (ids: unknown): ids is string[] =>
+  Array.isArray(ids) && ids.length === TOTAL && ids.every((id) => QUESTIONS.some((q) => q.id === id));
 
 function loadState(): QuizState {
   // /valutazione?nuova=1 : repartir de zéro (lien « Rifai la valutazione »)
   if (new URLSearchParams(window.location.search).has("nuova")) {
     removeSession(STORAGE_KEY);
     window.history.replaceState(null, "", window.location.pathname);
-    return initialState;
+    return newState();
   }
   const saved = readSession<QuizState>(STORAGE_KEY);
   // Une nouvelle version du questionnaire invalide les réponses en cours.
-  if (!saved || saved.version !== QUIZ_VERSION) return initialState;
+  if (!saved || saved.version !== QUIZ_VERSION || !isValidDraw(saved.questionIds)) return newState();
   const step = Math.min(Math.max(0, Number(saved.step) || 0), TOTAL);
-  return { version: QUIZ_VERSION, step, answers: saved.answers ?? {} };
+  return { version: QUIZ_VERSION, questionIds: saved.questionIds, step, answers: saved.answers ?? {} };
 }
 
 export default function Quiz() {
@@ -54,7 +59,7 @@ export default function Quiz() {
 
   const restart = () => {
     removeSession(STORAGE_KEY);
-    setState(initialState);
+    setState(newState());
   };
 
   if (state.step >= TOTAL) {
@@ -75,15 +80,17 @@ export default function Quiz() {
     );
   }
 
+  const questionId = state.questionIds[state.step];
   return (
     <QuestionStep
       key={state.step}
       index={state.step}
-      selected={state.answers[QUESTIONS[state.step].id]}
+      questionId={questionId}
+      selected={state.answers[questionId]}
       onSelect={(optionId) =>
         setState((s) => ({
           ...s,
-          answers: { ...s.answers, [QUESTIONS[s.step].id]: optionId },
+          answers: { ...s.answers, [questionId]: optionId },
         }))
       }
       onNext={() => goTo(state.step + 1)}
@@ -95,6 +102,7 @@ export default function Quiz() {
 
 interface QuestionStepProps {
   index: number;
+  questionId: string;
   selected: string | undefined;
   onSelect: (optionId: string) => void;
   onNext: () => void;
@@ -102,11 +110,11 @@ interface QuestionStepProps {
   onRestart?: () => void;
 }
 
-function QuestionStep({ index, selected, onSelect, onNext, onBack, onRestart }: QuestionStepProps) {
+function QuestionStep({ index, questionId, selected, onSelect, onNext, onBack, onRestart }: QuestionStepProps) {
   const locale = useLocale();
   const m = useMessages();
   const areas = getAreas(locale);
-  const question = getQuestions(locale)[index];
+  const question = getQuestions(locale).find((q) => q.id === questionId)!;
   const areaIndex = areas.findIndex((a) => a.id === question.areaId);
   const area = areas[areaIndex];
   const headingRef = useRef<HTMLHeadingElement>(null);
